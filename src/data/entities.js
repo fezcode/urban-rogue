@@ -1,0 +1,186 @@
+export const entities = {
+  // New York NPCs
+  hot_dog_vendor: {
+    id: 'hot_dog_vendor',
+    name: 'Hot Dog Vendor',
+    description: 'A grizzled man behind a steaming cart. He eyes you with mild suspicion.',
+    type: 'npc',
+    hp: 30,
+    shop: ['pretzel', 'energy_drink', 'bandage'],
+    dialogue: {
+      greeting: '"What\'ll it be? I ain\'t got all day."',
+      quest: null,
+    },
+  },
+  subway_rat: {
+    id: 'subway_rat',
+    name: 'Giant Subway Rat',
+    description: 'A rat the size of a small dog. Its eyes gleam with unnatural intelligence.',
+    type: 'hostile',
+    hp: 20,
+    damage: 5,
+    loot: ['energy_drink'],
+    xpReward: 10,
+  },
+  pickpocket: {
+    id: 'pickpocket',
+    name: 'Desperate Pickpocket',
+    description: 'A nervous figure in a hoodie, fingers twitching, scanning the crowd.',
+    type: 'hostile',
+    hp: 25,
+    damage: 7,
+    loot: ['pocket_knife', 'smartphone'],
+    xpReward: 15,
+  },
+
+  // Istanbul NPCs
+  carpet_merchant: {
+    id: 'carpet_merchant',
+    name: 'Carpet Merchant',
+    description: 'An elderly man sitting cross-legged among towers of folded rugs. He smiles warmly.',
+    type: 'npc',
+    hp: 30,
+    shop: ['kebab', 'bandage', 'bazaar_token'],
+    dialogue: {
+      greeting: '"Welcome, welcome! Sit, have some çay. You look like someone who appreciates fine things."',
+      quest: {
+        id: 'find_bazaar_token',
+        prompt: '"I lost a carved token somewhere near the ferry terminal. Bring it back, and I\'ll make it worth your while."',
+        requireItem: 'bazaar_token',
+        reward: { currency: 50, item: 'medkit' },
+        completed: false,
+      },
+    },
+  },
+  stray_cat_gang: {
+    id: 'stray_cat_gang',
+    name: 'Feral Cat Pack',
+    description: 'A dozen cats move as one, hissing in eerie unison. They guard their alley.',
+    type: 'hostile',
+    hp: 18,
+    damage: 6,
+    loot: ['lucky_cat'],
+    xpReward: 8,
+  },
+
+  // Ankara NPCs
+  tea_house_owner: {
+    id: 'tea_house_owner',
+    name: 'Tea House Owner',
+    description: 'A calm woman polishing glasses behind a counter. The samovar hisses behind her.',
+    type: 'npc',
+    hp: 30,
+    shop: ['kebab', 'medkit', 'bandage'],
+    dialogue: {
+      greeting: '"Hoş geldiniz. Sit down. The tea is always fresh here."',
+      quest: null,
+    },
+  },
+  rogue_drone: {
+    id: 'rogue_drone',
+    name: 'Rogue Drone',
+    description: 'A surveillance drone gone haywire, buzzing aggressively at head height.',
+    type: 'hostile',
+    hp: 30,
+    damage: 10,
+    loot: ['smartphone', 'taser'],
+    xpReward: 25,
+  },
+  bureaucrat: {
+    id: 'bureaucrat',
+    name: 'Bureaucrat',
+    description: 'A tired clerk behind bulletproof glass, surrounded by towers of paperwork.',
+    type: 'npc',
+    hp: 30,
+    shop: ['embassy_id'],
+    dialogue: {
+      greeting: '"Take a number. ...Actually, don\'t bother. What do you need?"',
+      quest: {
+        id: 'get_embassy_id',
+        prompt: '"Bring me proof you\'ve been to all five cities and I\'ll issue you a special clearance badge."',
+        requireItem: null,
+        requireFlag: 'visited_all_cities',
+        reward: { currency: 100, item: 'embassy_id' },
+        completed: false,
+      },
+    },
+  },
+
+  // Tokyo NPCs
+  shrine_keeper: {
+    id: 'shrine_keeper',
+    name: 'Shrine Keeper',
+    description: 'An old monk in white robes, raking gravel into perfect circles.',
+    type: 'npc',
+    hp: 30,
+    shop: ['onigiri', 'bandage', 'temple_seal'],
+    dialogue: {
+      greeting: '"The path finds those who are still enough to notice it."',
+      quest: null,
+    },
+  },
+  corrupted_atm: {
+    id: 'corrupted_atm',
+    name: 'Corrupted ATM',
+    description: 'An ATM flickering with glitched kanji. It whirs menacingly and ejects sparks.',
+    type: 'hostile',
+    hp: 35,
+    damage: 12,
+    loot: ['gold_coin'],
+    xpReward: 30,
+  },
+  salaryman: {
+    id: 'salaryman',
+    name: 'Exhausted Salaryman',
+    description: 'A man in a rumpled suit, briefcase clutched to his chest, asleep standing up.',
+    type: 'npc',
+    hp: 20,
+    shop: [],
+    dialogue: {
+      greeting: '"Huh? ...oh. Sorry. I thought you were my boss. Please, just let me rest."',
+      quest: null,
+    },
+  },
+
+  // Rome NPCs
+  gelato_vendor: {
+    id: 'gelato_vendor',
+    name: 'Gelato Vendor',
+    description: 'A cheerful woman behind a colorful cart, scooping impossibly perfect gelato.',
+    type: 'npc',
+    hp: 30,
+    shop: ['espresso', 'bandage', 'medkit'],
+    dialogue: {
+      greeting: '"Ciao! You look like you need something sweet. Or maybe something stronger, eh?"',
+      quest: null,
+    },
+  },
+  catacomb_dweller: {
+    id: 'catacomb_dweller',
+    name: 'Catacomb Dweller',
+    description: 'A pale figure wrapped in rags, lurking in the shadows of ancient tunnels.',
+    type: 'hostile',
+    hp: 28,
+    damage: 9,
+    loot: ['gold_coin', 'catacomb_map'],
+    xpReward: 20,
+  },
+  street_artist: {
+    id: 'street_artist',
+    name: 'Street Artist',
+    description: 'A paint-splattered artist sketching tourists in charcoal. She has a knowing look.',
+    type: 'npc',
+    hp: 20,
+    shop: [],
+    dialogue: {
+      greeting: '"Hold still. ...No, don\'t actually hold still, I was joking. What brings you to Rome?"',
+      quest: {
+        id: 'find_gold_coin',
+        prompt: '"I heard there\'s a gold coin lost in the catacombs. Bring it to me — I collect ancient things."',
+        requireItem: 'gold_coin',
+        reward: { currency: 75, item: 'katana_replica' },
+        completed: false,
+      },
+    },
+  },
+};

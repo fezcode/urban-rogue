@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg-deep: #0A0A0A;
+  --bg-surface: #1E1E1E;
+  --bg-elevated: #252525;
+  --bg-hover: #2A2A2A;
+  --text-primary: #EDEDED;
+  --text-secondary: #AAAAAA;
+  --text-muted: #888888;
+  --accent: #D4A574;
+  --accent-dim: rgba(212, 165, 116, 0.15);
+  --accent-blue: #6BA3D6;
+  --accent-blue-dim: rgba(107, 163, 214, 0.15);
+  --danger: #E85D5D;
+  --success: #5DAE72;
+  --border: #2A2A2A;
+  --border-focus: rgba(212, 165, 116, 0.5);
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
