@@ -22,3 +22,11 @@ A minimalist, AI-inspired urban text adventure featuring a sleek "Claude Dark Mo
 ## Tags
 
 `react` `vite` `roguelike` `text-adventure` `interactive-fiction` `mud` `dark-mode` `minimalist-ui` `urban-rpg` `game-engine` `javascript` `modern-ui` `terminal-game`
+
+## 📦 Deployment
+
+This project is configured for GitHub Pages. To deploy:
+
+1.  Run `npm run deploy`
+2.  Follow the prompts to push the `dist/` folder to the `gh-pages` branch.
+
