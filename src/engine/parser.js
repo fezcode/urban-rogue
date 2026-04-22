@@ -13,6 +13,18 @@ const FLY_ALIASES = {
   ankara: 'fly_ankara', ank: 'fly_ankara',
   tokyo: 'fly_tokyo', tok: 'fly_tokyo',
   rome: 'fly_rome', rom: 'fly_rome',
+  london: 'fly_london', lon: 'fly_london',
+  paris: 'fly_paris', par: 'fly_paris',
+};
+
+const CITY_DISPLAY_NAMES = {
+  fly_newyork: 'New York',
+  fly_istanbul: 'Istanbul',
+  fly_ankara: 'Ankara',
+  fly_tokyo: 'Tokyo',
+  fly_rome: 'Rome',
+  fly_london: 'London',
+  fly_paris: 'Paris',
 };
 
 export function handleCommand(input, state) {
@@ -26,7 +38,6 @@ export function handleCommand(input, state) {
   const room = world[state.currentRoom];
   const rs = state.roomState[state.currentRoom];
 
-  // In combat — restrict commands
   if (state.combatTarget) {
     return handleCombat(verb, rest, state, room, rs);
   }
@@ -74,6 +85,11 @@ export function handleCommand(input, state) {
     case 'stats':
     case 'status':
       return cmdStats(state);
+    case 'examine':
+    case 'inspect':
+      return cmdExamine(rest, state, rs);
+    case 'map':
+      return cmdMap(state);
     case 'save':
       return { stateUpdate: {}, text: '💾 Game saved.', doSave: true };
     case 'load':
@@ -98,6 +114,7 @@ function cmdHelp(state, room) {
 | \`go [direction]\` / \`n/s/e/w\` | Move to adjacent area |${flyHelp}
 | \`take [item]\` | Pick up an item |
 | \`drop [item]\` | Drop an item |
+| \`examine [item/npc]\` | Inspect something closely |
 | \`inventory\` / \`i\` | Check your belongings |
 | \`equip [weapon]\` | Equip a weapon |
 | \`use [item]\` | Use a consumable item |
@@ -105,6 +122,7 @@ function cmdHelp(state, room) {
 | \`attack [target]\` | Start a fight |
 | \`buy [item]\` | Buy from a merchant |
 | \`sell [item]\` | Sell an item to a merchant |
+| \`map\` | See areas visited in this city |
 | \`stats\` | View your stats |
 | \`save\` / \`load\` | Save or load your game |
 | \`restart\` | Start a new game |`;
@@ -114,7 +132,6 @@ function cmdHelp(state, room) {
 function cmdLook(state, room, rs) {
   let text = `## ${room.name}\n*${room.city}*\n\n${room.description}\n`;
 
-  // Exits
   const exits = Object.keys(room.exits)
     .filter((e) => !e.startsWith('fly_'))
     .map((e) => `**${e}**`)
@@ -124,25 +141,30 @@ function cmdLook(state, room, rs) {
   if (room.isAirport) {
     const destinations = Object.keys(room.exits)
       .filter((e) => e.startsWith('fly_'))
-      .map((e) => `**${e.replace('fly_', '').replace('newyork', 'New York').replace('istanbul', 'Istanbul').replace('ankara', 'Ankara').replace('tokyo', 'Tokyo').replace('rome', 'Rome')}**`)
+      .map((e) => `**${CITY_DISPLAY_NAMES[e] || e}**`)
       .join(', ');
     text += `\n**Flights:** ${destinations}`;
   }
 
-  // Items on ground
   if (rs.items.length > 0) {
-    const itemNames = rs.items.map((id) => items[id]?.name || id).join(', ');
+    const itemNames = rs.items.map((id) => {
+      const item = items[id];
+      return item ? `${item.emoji} **${item.name}**` : id;
+    }).join(', ');
     text += `\n\n*On the ground:* ${itemNames}`;
   }
 
-  // Entities
   const alive = rs.entities.filter((e) => e.alive);
   if (alive.length > 0) {
     text += '\n';
     for (const ent of alive) {
-      const tag = ent.type === 'hostile' ? ' ⚔️' : '';
+      const tag = ent.type === 'hostile' ? ' ⚔️' : ' 💬';
       text += `\n**${ent.name}**${tag} — ${ent.description}`;
     }
+  }
+
+  if (state.player.poisoned) {
+    text += '\n\n☠️ *You are **poisoned**. Use an antidote or medkit.*';
   }
 
   return { stateUpdate: {}, text };
@@ -168,7 +190,7 @@ function cmdFly(dest, state, room) {
   if (!key || !room.exits[key]) {
     const available = Object.keys(room.exits)
       .filter((e) => e.startsWith('fly_'))
-      .map((e) => e.replace('fly_', '').replace('newyork', 'New York'))
+      .map((e) => CITY_DISPLAY_NAMES[e] || e)
       .join(', ');
     return { stateUpdate: {}, text: `No flights to "${dest}". Available destinations: **${available}**` };
   }
@@ -182,6 +204,7 @@ function cmdFly(dest, state, room) {
   const result = moveToRoom(targetId, { ...state, player: newPlayer });
   result.stateUpdate.player = { ...newPlayer, ...result.stateUpdate.player };
   result.text = `✈️ You board a flight to **${target.city}**. (-$${cost})\n\n---\n\n` + result.text;
+  result.cityTransition = target.city;
   return result;
 }
 
@@ -193,6 +216,7 @@ function moveToRoom(targetId, state) {
   }
 
   const newVisited = new Set(state.visitedCities);
+  const prevCity = world[state.currentRoom]?.city;
   newVisited.add(target.city);
 
   const rs = newRoomState[targetId];
@@ -207,13 +231,16 @@ function moveToRoom(targetId, state) {
   if (target.isAirport) {
     const destinations = Object.keys(target.exits)
       .filter((e) => e.startsWith('fly_'))
-      .map((e) => `**${e.replace('fly_', '').replace('newyork', 'New York').replace('istanbul', 'Istanbul').replace('ankara', 'Ankara').replace('tokyo', 'Tokyo').replace('rome', 'Rome')}**`)
+      .map((e) => `**${CITY_DISPLAY_NAMES[e] || e}**`)
       .join(', ');
     text += `\n**Flights:** ${destinations}`;
   }
 
   if (rs.items.length > 0) {
-    const itemNames = rs.items.map((id) => items[id]?.name || id).join(', ');
+    const itemNames = rs.items.map((id) => {
+      const item = items[id];
+      return item ? `${item.emoji} ${item.name}` : id;
+    }).join(', ');
     text += `\n\n*On the ground:* ${itemNames}`;
   }
 
@@ -221,14 +248,36 @@ function moveToRoom(targetId, state) {
   if (alive.length > 0) {
     text += '\n';
     for (const ent of alive) {
-      const tag = ent.type === 'hostile' ? ' ⚔️' : '';
+      const tag = ent.type === 'hostile' ? ' ⚔️' : ' 💬';
       text += `\n**${ent.name}**${tag} — ${ent.description}`;
     }
   }
 
   const flags = { ...state.flags };
-  if (newVisited.size >= 5) {
+  if (newVisited.size >= 7) {
     flags.visited_all_cities = true;
+  }
+
+  // Apply poison tick
+  let newPlayer = { ...state.player };
+  if (state.player.poisoned) {
+    const poisonDmg = 8;
+    newPlayer.hp = Math.max(1, newPlayer.hp - poisonDmg);
+    text += `\n\n☠️ *Poison courses through you. (-${poisonDmg} HP)*`;
+    if (newPlayer.hp <= 1) {
+      text += '\n\n> You barely cling to consciousness. Use an **antidote** immediately.';
+    }
+  }
+
+  // Random event (20% chance)
+  const room = world[targetId];
+  if (room.randomEvents && room.randomEvents.length > 0 && Math.random() < 0.22) {
+    const evt = room.randomEvents[Math.floor(Math.random() * room.randomEvents.length)];
+    text += `\n\n---\n*${evt.text}*`;
+    if (evt.currency && evt.currency !== 0) {
+      newPlayer.currency = Math.max(0, newPlayer.currency + evt.currency);
+      if (evt.currency > 0) text += ` *(+$${evt.currency})*`;
+    }
   }
 
   return {
@@ -237,8 +286,11 @@ function moveToRoom(targetId, state) {
       roomState: newRoomState,
       visitedCities: newVisited,
       flags,
+      player: newPlayer,
     },
     text,
+    prevCity,
+    newCity: target.city,
   };
 }
 
@@ -262,12 +314,22 @@ function cmdTake(itemName, state, rs) {
 
   const newInventory = [...state.player.inventory, itemId];
 
+  let pickupText = `${item.emoji} You pick up the **${item.name}**.`;
+  if (item.type === 'consumable') {
+    pickupText += ` *(Restores ${item.healAmount} HP)*`;
+  } else if (item.type === 'weapon') {
+    pickupText += ` *(${item.damage} damage — use \`equip ${item.name.toLowerCase()}\`)*`;
+  } else {
+    pickupText += ` *${item.description}*`;
+  }
+
   return {
     stateUpdate: {
       player: { ...state.player, inventory: newInventory },
       roomState: newRoomState,
     },
-    text: `You pick up the **${item.name}**. ${item.description}`,
+    text: pickupText,
+    itemPickup: { emoji: item.emoji, name: item.name },
   };
 }
 
@@ -298,7 +360,7 @@ function cmdDrop(itemName, state, rs) {
       player: { ...state.player, inventory: newInventory, equippedWeapon: newWeapon },
       roomState: newRoomState,
     },
-    text: `You drop the **${item.name}**.`,
+    text: `You drop the **${item.emoji} ${item.name}**.`,
   };
 }
 
@@ -310,7 +372,10 @@ function cmdInventory(state) {
   for (const id of state.player.inventory) {
     const item = items[id];
     const equipped = state.player.equippedWeapon === id ? ' *(equipped)*' : '';
-    text += `\n- **${item.name}**${equipped} — ${item.description}`;
+    text += `\n- ${item?.emoji || '•'} **${item?.name || id}**${equipped} — ${item?.description || ''}`;
+  }
+  if (state.player.poisoned) {
+    text += '\n\n☠️ *Status: **Poisoned***';
   }
   return { stateUpdate: {}, text };
 }
@@ -332,12 +397,11 @@ function cmdEquip(itemName, state) {
 
   return {
     stateUpdate: { player: { ...state.player, equippedWeapon: itemId } },
-    text: `You equip the **${item.name}**. (${item.damage} damage)`,
+    text: `${item.emoji} You equip the **${item.name}**. *(${item.damage} damage)*`,
   };
 }
 
 function cmdUse(rest, state) {
-  // Parse "use X" or "use X on Y"
   const match = rest.match(/^(.+?)(?:\s+on\s+(.+))?$/);
   if (!match) return { stateUpdate: {}, text: 'Use what?' };
 
@@ -356,15 +420,82 @@ function cmdUse(rest, state) {
     const healed = newHp - state.player.hp;
     const newInventory = [...state.player.inventory];
     newInventory.splice(idx, 1);
+    let newPoisoned = state.player.poisoned;
+    let extraText = '';
+    if (item.curesPoison && state.player.poisoned) {
+      newPoisoned = false;
+      extraText = ' ☠️ *Poison cured!*';
+    }
+    // Medkit also cures poison
+    if (item.id === 'medkit' && state.player.poisoned) {
+      newPoisoned = false;
+      extraText = ' ☠️ *Poison cured!*';
+    }
     return {
       stateUpdate: {
-        player: { ...state.player, hp: newHp, inventory: newInventory },
+        player: { ...state.player, hp: newHp, inventory: newInventory, poisoned: newPoisoned },
       },
-      text: `You use the **${item.name}**. Restored **${healed} HP**. (${newHp}/${state.player.maxHp})`,
+      text: `${item.emoji} You use the **${item.name}**. Restored **${healed} HP**. *(${newHp}/${state.player.maxHp})*${extraText}`,
     };
   }
 
-  return { stateUpdate: {}, text: `You're not sure how to use the **${item.name}** right now.` };
+  return { stateUpdate: {}, text: `You're not sure how to use the **${item.emoji} ${item.name}** right now.` };
+}
+
+function cmdExamine(target, state, rs) {
+  if (!target) return { stateUpdate: {}, text: 'Examine what?' };
+
+  // Check inventory first
+  const invItem = state.player.inventory.find(
+    (id) => id === target || items[id]?.name.toLowerCase().includes(target)
+  );
+  if (invItem) {
+    const item = items[invItem];
+    let text = `${item.emoji} **${item.name}**\n\n${item.description}`;
+    if (item.type === 'weapon') text += `\n\nDamage: **${item.damage}**  |  Value: $${item.value}`;
+    if (item.type === 'consumable') text += `\n\nHeals: **${item.healAmount} HP**  |  Value: $${item.value}`;
+    if (item.type === 'misc' || item.type === 'key') text += `\n\nValue: $${item.value}`;
+    return { stateUpdate: {}, text };
+  }
+
+  // Check ground items
+  const groundItem = rs.items.find(
+    (id) => id === target || items[id]?.name.toLowerCase().includes(target)
+  );
+  if (groundItem) {
+    const item = items[groundItem];
+    return { stateUpdate: {}, text: `${item.emoji} **${item.name}** (on the ground)\n\n${item.description}` };
+  }
+
+  // Check entities
+  const entity = rs.entities.find(
+    (e) => e.alive && e.name.toLowerCase().includes(target)
+  );
+  if (entity) {
+    const tag = entity.type === 'hostile' ? '⚔️ **Hostile**' : '💬 **NPC**';
+    return {
+      stateUpdate: {},
+      text: `**${entity.name}** — ${tag}\n\n${entity.description}\n\nHP: ${entity.hp}`,
+    };
+  }
+
+  return { stateUpdate: {}, text: `You don't see "${target}" to examine.` };
+}
+
+function cmdMap(state) {
+  const currentCity = world[state.currentRoom].city;
+  const cityRooms = Object.values(world).filter((r) => r.city === currentCity);
+  let text = `## ${currentCity} — Visited Areas\n`;
+  for (const room of cityRooms) {
+    const rs = state.roomState[room.id];
+    const visited = rs?.visited;
+    const isCurrent = room.id === state.currentRoom;
+    const prefix = isCurrent ? '→ ' : visited ? '✓ ' : '? ';
+    const name = visited ? `**${room.name}**` : '*Unknown area*';
+    text += `\n${prefix} ${name}`;
+    if (isCurrent) text += ' *(you are here)*';
+  }
+  return { stateUpdate: {}, text };
 }
 
 function cmdTalk(npcName, state, rs) {
@@ -384,13 +515,11 @@ function cmdTalk(npcName, state, rs) {
     const q = def.dialogue.quest;
     text += `\n\n${def.dialogue.quest.prompt}`;
 
-    // Check if player can complete quest
     if (q.requireItem && state.player.inventory.includes(q.requireItem)) {
       const newInventory = state.player.inventory.filter((id) => id !== q.requireItem);
       if (q.reward.item) newInventory.push(q.reward.item);
       const newCurrency = state.player.currency + (q.reward.currency || 0);
 
-      // Mark quest completed
       const newRoomState = { ...state.roomState };
       const newEntities = rs.entities.map((e) => {
         if (e.id === entity.id) return { ...e };
@@ -398,9 +527,13 @@ function cmdTalk(npcName, state, rs) {
       });
       newRoomState[state.currentRoom] = { ...rs, entities: newEntities };
 
-      text += `\n\n---\n*You hand over the **${items[q.requireItem].name}**.*`;
-      text += `\n\n**Quest Complete!** Received **$${q.reward.currency}**`;
-      if (q.reward.item) text += ` and **${items[q.reward.item].name}**`;
+      const reqItem = items[q.requireItem];
+      text += `\n\n---\n*You hand over the **${reqItem.emoji} ${reqItem.name}**.*`;
+      text += `\n\n🎉 **Quest Complete!** Received **$${q.reward.currency}**`;
+      if (q.reward.item) {
+        const rewardItem = items[q.reward.item];
+        text += ` and **${rewardItem.emoji} ${rewardItem.name}**`;
+      }
       text += '.';
 
       return {
@@ -414,8 +547,11 @@ function cmdTalk(npcName, state, rs) {
       const newInventory = [...state.player.inventory];
       if (q.reward.item) newInventory.push(q.reward.item);
       const newCurrency = state.player.currency + (q.reward.currency || 0);
-      text += `\n\n---\n**Quest Complete!** Received **$${q.reward.currency}**`;
-      if (q.reward.item) text += ` and **${items[q.reward.item].name}**`;
+      text += `\n\n---\n🎉 **Quest Complete!** Received **$${q.reward.currency}**`;
+      if (q.reward.item) {
+        const rewardItem = items[q.reward.item];
+        text += ` and **${rewardItem.emoji} ${rewardItem.name}**`;
+      }
       text += '.';
       return {
         stateUpdate: {
@@ -431,10 +567,10 @@ function cmdTalk(npcName, state, rs) {
     for (const itemId of def.shop) {
       const item = items[itemId];
       if (item) {
-        text += `\n- **${item.name}** — $${item.value} — *${item.description}*`;
+        text += `\n- ${item.emoji} **${item.name}** — $${item.value} — *${item.description}*`;
       }
     }
-    text += '\n\n*Use `buy [item]` to purchase.*';
+    text += '\n\n*Use `buy [item name]` to purchase.*';
   }
 
   return { stateUpdate: {}, text };
@@ -443,7 +579,6 @@ function cmdTalk(npcName, state, rs) {
 function cmdBuy(itemName, state, rs) {
   if (!itemName) return { stateUpdate: {}, text: 'Buy what?' };
 
-  // Find a merchant in the room
   const merchant = rs.entities.find((e) => e.alive && e.type === 'npc' && entities[e.id]?.shop?.length > 0);
   if (!merchant) {
     return { stateUpdate: {}, text: 'There\'s no one here to buy from.' };
@@ -470,7 +605,7 @@ function cmdBuy(itemName, state, rs) {
         inventory: [...state.player.inventory, itemId],
       },
     },
-    text: `You buy the **${item.name}** for **$${item.value}**. Remaining: $${state.player.currency - item.value}.`,
+    text: `${item.emoji} You buy the **${item.name}** for **$${item.value}**. Remaining: $${state.player.currency - item.value}.`,
   };
 }
 
@@ -507,8 +642,14 @@ function cmdSell(itemName, state, rs) {
         equippedWeapon: newWeapon,
       },
     },
-    text: `You sell the **${item.name}** for **$${sellPrice}**.`,
+    text: `${item.emoji} You sell the **${item.name}** for **$${sellPrice}**.`,
   };
+}
+
+function rollDamage(baseDamage) {
+  const isCrit = Math.random() < 0.2;
+  const roll = Math.floor(Math.random() * 4) + baseDamage - 1;
+  return { dmg: isCrit ? roll * 2 : roll, crit: isCrit };
 }
 
 function cmdAttack(targetName, state, rs) {
@@ -524,16 +665,16 @@ function cmdAttack(targetName, state, rs) {
     return { stateUpdate: {}, text: `**${entity.name}** is not hostile. Maybe try **talk to** them instead.` };
   }
 
-  // Enter combat
   const weapon = state.player.equippedWeapon ? items[state.player.equippedWeapon] : null;
-  const playerDmg = weapon ? weapon.damage : 5;
-  const roll = Math.floor(Math.random() * 4) + playerDmg - 1;
+  const baseDmg = weapon ? weapon.damage : 5;
+  const { dmg: playerDmg, crit } = rollDamage(baseDmg);
 
-  const newHp = Math.max(0, entity.hp - roll);
-  let text = `⚔️ **Combat: ${entity.name}** (HP: ${entity.hp})\n\nYou strike with ${weapon ? `your **${weapon.name}**` : 'your fists'} for **${roll} damage**!`;
+  const newEnemyHp = Math.max(0, entity.hp - playerDmg);
+  const weaponLabel = weapon ? `your **${weapon.emoji} ${weapon.name}**` : '**your fists**';
+  const critLabel = crit ? ' ✨ ***CRITICAL HIT!***' : '';
+  let text = `⚔️ **Combat: ${entity.name}** *(HP: ${entity.hp})*\n\nYou strike with ${weaponLabel} for **${playerDmg} damage**!${critLabel}`;
 
-  if (newHp <= 0) {
-    // Enemy defeated
+  if (newEnemyHp <= 0) {
     text += `\n\nThe **${entity.name}** is defeated!`;
     const def = entities[entity.id];
     const loot = def.loot || [];
@@ -547,16 +688,19 @@ function cmdAttack(targetName, state, rs) {
     newRoomState[state.currentRoom] = { ...rs, entities: newEntities, items: newRoomItems };
 
     if (loot.length > 0) {
-      const lootNames = loot.map((id) => items[id]?.name || id).join(', ');
+      const lootNames = loot.map((id) => {
+        const item = items[id];
+        return item ? `${item.emoji} ${item.name}` : id;
+      }).join(', ');
       text += `\n\n*Dropped:* ${lootNames}`;
     }
 
     const newXp = state.player.xp + xp;
     const newLevel = Math.floor(newXp / 50) + 1;
     const leveledUp = newLevel > state.player.level;
-    text += `\n*+${xp} XP*`;
+    text += `\n\n*+${xp} XP*`;
     if (leveledUp) {
-      text += `\n\n🎉 **Level Up!** You are now level ${newLevel}. Max HP increased!`;
+      text += `\n\n🎉 **Level Up!** You are now level **${newLevel}**. Max HP +10!`;
     }
 
     return {
@@ -575,25 +719,33 @@ function cmdAttack(targetName, state, rs) {
     };
   }
 
-  // Enemy survives, enter combat
-  const enemyDmg = Math.floor(Math.random() * 4) + entity.damage - 1;
+  // Enemy survives — retaliates
+  const def = entities[entity.id];
+  const { dmg: enemyDmg } = rollDamage(entity.damage);
   const newPlayerHp = Math.max(0, state.player.hp - enemyDmg);
 
-  text += `\n${entity.name} retaliates for **${enemyDmg} damage**!`;
-  text += `\n\n*Your HP: ${newPlayerHp}/${state.player.maxHp} | ${entity.name} HP: ${newHp}*`;
-  text += '\n\nType **attack** to continue fighting, **use [item]** to heal, or **flee** to run.';
+  // Poison check
+  let newPoisoned = state.player.poisoned;
+  let poisonText = '';
+  if (!newPoisoned && def.poisonChance && Math.random() < def.poisonChance) {
+    newPoisoned = true;
+    poisonText = '\n☠️ *You\'ve been **poisoned**! Use an antidote or medkit.*';
+  }
 
-  // Update entity HP in room state
+  text += `\n${entity.name} retaliates for **${enemyDmg} damage**!${poisonText}`;
+  text += `\n\n*Your HP: ${newPlayerHp}/${state.player.maxHp} | ${entity.name} HP: ${newEnemyHp}*`;
+  text += '\n\nType **attack** to continue, **use [item]** to heal, or **flee** to escape.';
+
   const newRoomState = { ...state.roomState };
   const newEntities = rs.entities.map((e) =>
-    e.id === entity.id ? { ...e, hp: newHp } : e
+    e.id === entity.id ? { ...e, hp: newEnemyHp } : e
   );
   newRoomState[state.currentRoom] = { ...rs, entities: newEntities };
 
   if (newPlayerHp <= 0) {
     return {
       stateUpdate: {
-        player: { ...state.player, hp: 0 },
+        player: { ...state.player, hp: 0, poisoned: newPoisoned },
         gameOver: true,
         combatTarget: null,
       },
@@ -603,7 +755,7 @@ function cmdAttack(targetName, state, rs) {
 
   return {
     stateUpdate: {
-      player: { ...state.player, hp: newPlayerHp },
+      player: { ...state.player, hp: newPlayerHp, poisoned: newPoisoned },
       roomState: newRoomState,
       combatTarget: entity.id,
     },
@@ -618,9 +770,18 @@ function handleCombat(verb, rest, state, room, rs) {
   }
 
   if (verb === 'flee' || verb === 'run') {
+    // 70% success rate
+    const flees = Math.random() < 0.7;
     const dmg = Math.floor(Math.random() * entity.damage);
-    const newHp = Math.max(0, state.player.hp - dmg);
-    let text = `You turn and flee! ${entity.name} strikes you as you run for **${dmg} damage**. (HP: ${newHp}/${state.player.maxHp})`;
+    const newHp = Math.max(0, state.player.hp - (flees ? dmg : Math.floor(dmg * 1.5)));
+    let text = flees
+      ? `You turn and flee! ${entity.name} clips you as you run for **${dmg} damage**. *(HP: ${newHp}/${state.player.maxHp})*`
+      : `You try to flee but ${entity.name} cuts you off! They strike for **${Math.floor(dmg * 1.5)} damage**. Still fighting!\n\nType **attack**, **use [item]**, or **flee** again.`;
+
+    if (!flees) {
+      const newRoomState = { ...state.roomState };
+      return { stateUpdate: { player: { ...state.player, hp: newHp }, roomState: newRoomState }, text };
+    }
     if (newHp <= 0) {
       return {
         stateUpdate: { player: { ...state.player, hp: 0 }, gameOver: true, combatTarget: null },
@@ -651,16 +812,20 @@ function handleCombat(verb, rest, state, room, rs) {
 function cmdStats(state) {
   const weapon = state.player.equippedWeapon ? items[state.player.equippedWeapon] : null;
   const cities = [...state.visitedCities].join(', ');
+  const totalCities = 7;
+  const statusLine = state.player.poisoned ? '\n| Status | ☠️ Poisoned |' : '';
   const text = `## Stats
 
 | Stat | Value |
 |------|-------|
 | HP | ${state.player.hp} / ${state.player.maxHp} |
 | Level | ${state.player.level} |
-| XP | ${state.player.xp} |
+| XP | ${state.player.xp} / ${state.player.level * 50} |
 | Currency | $${state.player.currency} |
-| Weapon | ${weapon ? `${weapon.name} (${weapon.damage} dmg)` : 'Fists (5 dmg)'} |
-| Cities Visited | ${cities} |`;
+| Weapon | ${weapon ? `${weapon.emoji} ${weapon.name} (${weapon.damage} dmg)` : '👊 Fists (5 dmg)'} |
+| Cities | ${state.visitedCities.size} / ${totalCities} |${statusLine}
+
+**Visited:** ${cities}`;
 
   return { stateUpdate: {}, text };
 }

@@ -1,9 +1,11 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useGameState } from './hooks/useGameState';
 import { handleCommand } from './engine/parser';
+import { world } from './data/world';
 import Sidebar from './components/Sidebar';
 import ChatFeed from './components/ChatFeed';
 import CommandInput from './components/CommandInput';
+import CityArrival from './components/CityArrival';
 import './App.css';
 
 const SAVE_KEY = 'urban-rogue-save';
@@ -25,13 +27,12 @@ function deserializeState(json) {
 
 function App() {
   const { state, addMessage, updateState, resetGame } = useGameState();
+  const [cityTransition, setCityTransition] = useState(null);
 
   const onCommand = useCallback(
     (input) => {
-      // Add user message
       addMessage('user', input);
 
-      // Handle special cases
       if (state.gameOver && input.toLowerCase() !== 'restart') {
         addMessage('system', 'You are dead. Type **restart** to begin again.');
         return;
@@ -40,7 +41,6 @@ function App() {
       const result = handleCommand(input, state);
       if (!result) return;
 
-      // Save
       if (result.doSave) {
         try {
           localStorage.setItem(SAVE_KEY, serializeState(state));
@@ -51,7 +51,6 @@ function App() {
         return;
       }
 
-      // Load
       if (result.doLoad) {
         try {
           const saved = localStorage.getItem(SAVE_KEY);
@@ -68,18 +67,24 @@ function App() {
         return;
       }
 
-      // Reset
       if (result.doReset) {
         resetGame();
+        setCityTransition(null);
         return;
       }
 
-      // Apply state updates
       if (result.stateUpdate && Object.keys(result.stateUpdate).length > 0) {
         updateState(result.stateUpdate);
       }
 
-      // Add response
+      // Detect city transition: only show skyline when flying (cityTransition field is set)
+      if (result.cityTransition) {
+        const prevCity = world[state.currentRoom]?.city;
+        if (prevCity !== result.cityTransition) {
+          setCityTransition(result.cityTransition);
+        }
+      }
+
       if (result.text) {
         addMessage('system', result.text);
       }
@@ -98,6 +103,13 @@ function App() {
         <ChatFeed messages={state.messages} />
         <CommandInput onSubmit={onCommand} disabled={false} />
       </div>
+
+      {cityTransition && (
+        <CityArrival
+          city={cityTransition}
+          onComplete={() => setCityTransition(null)}
+        />
+      )}
     </div>
   );
 }

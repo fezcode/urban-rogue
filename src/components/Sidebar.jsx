@@ -1,11 +1,24 @@
 import { world } from '../data/world';
 import { items } from '../data/items';
 
+const CITY_EMOJIS = {
+  'New York': '🗽',
+  'Istanbul': '🕌',
+  'Ankara': '🏛️',
+  'Tokyo': '⛩️',
+  'Rome': '🏛️',
+  'London': '🎡',
+  'Paris': '🗼',
+};
+
 export default function Sidebar({ player, currentRoom, visitedCities }) {
   const room = world[currentRoom];
   const hpPercent = (player.hp / player.maxHp) * 100;
   const hpColor =
     hpPercent > 60 ? 'var(--success)' : hpPercent > 30 ? 'var(--accent)' : 'var(--danger)';
+
+  const xpToNext = player.level * 50;
+  const xpPercent = Math.min(100, (player.xp / xpToNext) * 100);
 
   return (
     <aside className="sidebar">
@@ -17,7 +30,9 @@ export default function Sidebar({ player, currentRoom, visitedCities }) {
         <div className="sidebar-section-title">Location</div>
         <div className="stat-row">
           <span className="stat-label">City</span>
-          <span className="city-badge">{room.city}</span>
+          <span className="city-badge">
+            {CITY_EMOJIS[room.city] || '🌍'} {room.city}
+          </span>
         </div>
         <div className="stat-row">
           <span className="stat-label">Area</span>
@@ -30,6 +45,11 @@ export default function Sidebar({ player, currentRoom, visitedCities }) {
       {/* Vitals */}
       <div className="sidebar-section">
         <div className="sidebar-section-title">Vitals</div>
+
+        {player.poisoned && (
+          <div className="poison-indicator">☠️ Poisoned</div>
+        )}
+
         <div className="stat-row">
           <span className="stat-label">HP</span>
           <span className={`stat-value ${hpPercent <= 30 ? 'danger' : 'hp'}`}>
@@ -42,15 +62,23 @@ export default function Sidebar({ player, currentRoom, visitedCities }) {
             style={{ width: `${hpPercent}%`, background: hpColor }}
           />
         </div>
-        <div className="stat-row">
+
+        <div className="stat-row" style={{ marginTop: 8 }}>
           <span className="stat-label">Level</span>
           <span className="stat-value">{player.level}</span>
         </div>
         <div className="stat-row">
           <span className="stat-label">XP</span>
-          <span className="stat-value">{player.xp}</span>
+          <span className="stat-value">{player.xp} / {xpToNext}</span>
         </div>
-        <div className="stat-row">
+        <div className="hp-bar-container">
+          <div
+            className="hp-bar"
+            style={{ width: `${xpPercent}%`, background: 'var(--accent-blue)' }}
+          />
+        </div>
+
+        <div className="stat-row" style={{ marginTop: 8 }}>
           <span className="stat-label">Currency</span>
           <span className="stat-value currency">${player.currency}</span>
         </div>
@@ -64,8 +92,8 @@ export default function Sidebar({ player, currentRoom, visitedCities }) {
         <div className="stat-row">
           <span className="stat-label">
             {player.equippedWeapon
-              ? items[player.equippedWeapon]?.name
-              : 'Fists'}
+              ? `${items[player.equippedWeapon]?.emoji} ${items[player.equippedWeapon]?.name}`
+              : '👊 Fists'}
           </span>
           <span className="stat-value">
             {player.equippedWeapon
@@ -91,8 +119,9 @@ export default function Sidebar({ player, currentRoom, visitedCities }) {
               const isEquipped = player.equippedWeapon === id;
               return (
                 <li key={`${id}-${idx}`} className="inventory-item">
-                  <span>{item?.name || id}</span>
-                  {isEquipped && <span className="equipped-badge">EQUIPPED</span>}
+                  <span className="item-emoji">{item?.emoji || '•'}</span>
+                  <span className="item-name">{item?.name || id}</span>
+                  {isEquipped && <span className="equipped-badge">EQ</span>}
                 </li>
               );
             })}
@@ -104,10 +133,14 @@ export default function Sidebar({ player, currentRoom, visitedCities }) {
 
       {/* Visited Cities */}
       <div className="sidebar-section">
-        <div className="sidebar-section-title">Cities Visited</div>
+        <div className="sidebar-section-title">
+          Cities Visited ({visitedCities.size}/7)
+        </div>
         <div className="visited-cities">
           {[...visitedCities].map((city) => (
-            <span key={city} className="visited-city">{city}</span>
+            <span key={city} className="visited-city">
+              {CITY_EMOJIS[city] || '🌍'} {city}
+            </span>
           ))}
         </div>
       </div>

@@ -6,7 +6,6 @@ import { entities } from '../data/entities';
 const START_ROOM = 'ny_times_square';
 
 function createInitialState() {
-  // Deep-clone room items/entities so mutations don't affect originals
   const roomState = {};
   for (const [id, room] of Object.entries(world)) {
     roomState[id] = {
@@ -30,6 +29,7 @@ function createInitialState() {
       equippedWeapon: null,
       xp: 0,
       level: 1,
+      poisoned: false,
     },
     currentRoom: START_ROOM,
     roomState,

@@ -3,6 +3,7 @@ export const items = {
   bandage: {
     id: 'bandage',
     name: 'Bandage',
+    emoji: '🩹',
     description: 'A basic first-aid bandage. Restores 15 HP.',
     type: 'consumable',
     healAmount: 15,
@@ -11,6 +12,7 @@ export const items = {
   medkit: {
     id: 'medkit',
     name: 'Medkit',
+    emoji: '🏥',
     description: 'A professional medical kit. Restores 40 HP.',
     type: 'consumable',
     healAmount: 40,
@@ -19,6 +21,7 @@ export const items = {
   energy_drink: {
     id: 'energy_drink',
     name: 'Energy Drink',
+    emoji: '🥤',
     description: 'A neon-green can of synthetic caffeine. Restores 10 HP.',
     type: 'consumable',
     healAmount: 10,
@@ -27,6 +30,7 @@ export const items = {
   kebab: {
     id: 'kebab',
     name: 'Döner Kebab',
+    emoji: '🥙',
     description: 'A warm, fragrant kebab wrapped in lavash. Restores 20 HP.',
     type: 'consumable',
     healAmount: 20,
@@ -35,6 +39,7 @@ export const items = {
   espresso: {
     id: 'espresso',
     name: 'Espresso',
+    emoji: '☕',
     description: 'A tiny cup of impossibly strong Italian coffee. Restores 8 HP.',
     type: 'consumable',
     healAmount: 8,
@@ -43,6 +48,7 @@ export const items = {
   onigiri: {
     id: 'onigiri',
     name: 'Onigiri',
+    emoji: '🍙',
     description: 'A triangular rice ball from a convenience store. Restores 12 HP.',
     type: 'consumable',
     healAmount: 12,
@@ -51,16 +57,73 @@ export const items = {
   pretzel: {
     id: 'pretzel',
     name: 'Street Pretzel',
+    emoji: '🥨',
     description: 'A warm, salted pretzel from a NYC cart. Restores 10 HP.',
     type: 'consumable',
     healAmount: 10,
     value: 4,
+  },
+  fish_and_chips: {
+    id: 'fish_and_chips',
+    name: 'Fish & Chips',
+    emoji: '🐟',
+    description: 'Battered cod and thick-cut chips, wrapped in newspaper. Restores 22 HP.',
+    type: 'consumable',
+    healAmount: 22,
+    value: 9,
+  },
+  london_fog_tea: {
+    id: 'london_fog_tea',
+    name: 'London Fog Tea',
+    emoji: '🫖',
+    description: 'Earl grey with lavender and steamed milk. Restores 8 HP.',
+    type: 'consumable',
+    healAmount: 8,
+    value: 5,
+  },
+  baguette: {
+    id: 'baguette',
+    name: 'Baguette',
+    emoji: '🥖',
+    description: 'A crusty Parisian baguette, still warm. Restores 14 HP.',
+    type: 'consumable',
+    healAmount: 14,
+    value: 4,
+  },
+  bordeaux_wine: {
+    id: 'bordeaux_wine',
+    name: 'Bordeaux Wine',
+    emoji: '🍷',
+    description: 'A deep red from the Médoc. Heals 18 HP and steadies the nerves.',
+    type: 'consumable',
+    healAmount: 18,
+    value: 20,
+  },
+  macaroon: {
+    id: 'macaroon',
+    name: 'Macaron',
+    emoji: '🟣',
+    description: 'A Ladurée macaron that costs more than it should. Restores 6 HP.',
+    type: 'consumable',
+    healAmount: 6,
+    value: 12,
+  },
+  antidote: {
+    id: 'antidote',
+    name: 'Antidote Vial',
+    emoji: '💉',
+    description: 'A small vial of antitoxin. Cures poison and restores 5 HP.',
+    type: 'consumable',
+    healAmount: 5,
+    curesPoison: true,
+    value: 25,
   },
 
   // Weapons
   pocket_knife: {
     id: 'pocket_knife',
     name: 'Pocket Knife',
+    emoji: '🔪',
     description: 'A small folding knife. Not much, but better than fists.',
     type: 'weapon',
     damage: 8,
@@ -69,6 +132,7 @@ export const items = {
   crowbar: {
     id: 'crowbar',
     name: 'Crowbar',
+    emoji: '🔧',
     description: 'A heavy steel crowbar. Good for prying and persuading.',
     type: 'weapon',
     damage: 14,
@@ -77,6 +141,7 @@ export const items = {
   katana_replica: {
     id: 'katana_replica',
     name: 'Replica Katana',
+    emoji: '⚔️',
     description: 'A tourist-shop katana. Surprisingly sharp.',
     type: 'weapon',
     damage: 18,
@@ -85,6 +150,7 @@ export const items = {
   taser: {
     id: 'taser',
     name: 'Taser',
+    emoji: '⚡',
     description: 'A compact stun device. Delivers a shocking blow.',
     type: 'weapon',
     damage: 20,
@@ -93,16 +159,36 @@ export const items = {
   brass_knuckles: {
     id: 'brass_knuckles',
     name: 'Brass Knuckles',
+    emoji: '👊',
     description: 'Cold metal that adds weight to your punches.',
     type: 'weapon',
     damage: 12,
     value: 20,
+  },
+  brolly: {
+    id: 'brolly',
+    name: 'Reinforced Umbrella',
+    emoji: '☂️',
+    description: 'A heavy-handled British brolly, repurposed for self-defence.',
+    type: 'weapon',
+    damage: 9,
+    value: 12,
+  },
+  baguette_weapon: {
+    id: 'baguette_weapon',
+    name: 'Stale Baguette',
+    emoji: '🥖',
+    description: 'Three-day-old Parisian bread. Hits like concrete.',
+    type: 'weapon',
+    damage: 6,
+    value: 1,
   },
 
   // Keys & Quest Items
   subway_pass: {
     id: 'subway_pass',
     name: 'Subway Pass',
+    emoji: '🎫',
     description: 'An unlimited MetroCard. Opens the gates to the underground.',
     type: 'key',
     value: 0,
@@ -110,6 +196,7 @@ export const items = {
   bazaar_token: {
     id: 'bazaar_token',
     name: 'Bazaar Token',
+    emoji: '🪙',
     description: 'A carved wooden token from the Grand Bazaar. Someone might want this.',
     type: 'key',
     value: 0,
@@ -117,6 +204,7 @@ export const items = {
   temple_seal: {
     id: 'temple_seal',
     name: 'Temple Seal',
+    emoji: '🔮',
     description: 'A red ink stamp from an ancient shrine. It hums faintly.',
     type: 'key',
     value: 0,
@@ -124,6 +212,7 @@ export const items = {
   catacomb_map: {
     id: 'catacomb_map',
     name: 'Catacomb Map',
+    emoji: '🗺️',
     description: 'A hand-drawn map of tunnels beneath Rome. Smells of dust and centuries.',
     type: 'key',
     value: 0,
@@ -131,7 +220,32 @@ export const items = {
   embassy_id: {
     id: 'embassy_id',
     name: 'Embassy ID Badge',
+    emoji: '🪪',
     description: 'A laminated ID card granting access to restricted areas in Ankara.',
+    type: 'key',
+    value: 0,
+  },
+  tube_pass: {
+    id: 'tube_pass',
+    name: 'London Tube Pass',
+    emoji: '🎫',
+    description: 'An Oyster card loaded with credit. Valid across all zones.',
+    type: 'key',
+    value: 0,
+  },
+  crown_jewel_fragment: {
+    id: 'crown_jewel_fragment',
+    name: 'Crown Jewel Fragment',
+    emoji: '💎',
+    description: 'A priceless shard from the Tower of London. Very illegal to possess.',
+    type: 'key',
+    value: 0,
+  },
+  stolen_painting: {
+    id: 'stolen_painting',
+    name: 'Stolen Painting',
+    emoji: '🖼️',
+    description: 'A rolled canvas. The signature at the bottom reads "Monet". Your hands are shaking.',
     type: 'key',
     value: 0,
   },
@@ -140,6 +254,7 @@ export const items = {
   broken_umbrella: {
     id: 'broken_umbrella',
     name: 'Broken Umbrella',
+    emoji: '☂️',
     description: 'A mangled umbrella. Useless against rain, possibly useful as a weapon.',
     type: 'weapon',
     damage: 4,
@@ -148,6 +263,7 @@ export const items = {
   gold_coin: {
     id: 'gold_coin',
     name: 'Gold Coin',
+    emoji: '💰',
     description: 'An ancient gold coin, possibly Roman. Worth a lot to the right buyer.',
     type: 'misc',
     value: 50,
@@ -155,6 +271,7 @@ export const items = {
   smartphone: {
     id: 'smartphone',
     name: 'Cracked Smartphone',
+    emoji: '📱',
     description: 'A phone with a shattered screen. Still powers on.',
     type: 'misc',
     value: 12,
@@ -162,8 +279,25 @@ export const items = {
   lucky_cat: {
     id: 'lucky_cat',
     name: 'Lucky Cat Figurine',
+    emoji: '🐱',
     description: 'A small maneki-neko. Its paw waves endlessly.',
     type: 'misc',
     value: 8,
+  },
+  beret: {
+    id: 'beret',
+    name: 'Black Beret',
+    emoji: '🎩',
+    description: 'A genuine French beret. Wearing it makes you feel 40% more sophisticated.',
+    type: 'misc',
+    value: 15,
+  },
+  tower_bridge_keychain: {
+    id: 'tower_bridge_keychain',
+    name: 'Tower Bridge Keychain',
+    emoji: '🔑',
+    description: 'A tourist trinket. Not worth much, but it reminds you of the river.',
+    type: 'misc',
+    value: 3,
   },
 };
