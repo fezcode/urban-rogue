@@ -372,7 +372,13 @@ function cmdInventory(state) {
   for (const id of state.player.inventory) {
     const item = items[id];
     const equipped = state.player.equippedWeapon === id ? ' *(equipped)*' : '';
-    text += `\n- ${item?.emoji || '•'} **${item?.name || id}**${equipped} — ${item?.description || ''}`;
+    const stats = [];
+    if (item?.damage != null) stats.push(`⚔️ ${item.damage} dmg`);
+    if (item?.healAmount != null) stats.push(`❤️ +${item.healAmount} HP`);
+    if (item?.curesPoison) stats.push('☠️ cures poison');
+    if (item?.value) stats.push(`💰 ${item.value}`);
+    const statLine = stats.length ? ` *(${stats.join(', ')})*` : '';
+    text += `\n- ${item?.emoji || '•'} **${item?.name || id}**${equipped}${statLine} — ${item?.description || ''}`;
   }
   if (state.player.poisoned) {
     text += '\n\n☠️ *Status: **Poisoned***';
